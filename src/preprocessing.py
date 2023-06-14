@@ -22,7 +22,7 @@ def get_facility(file_path: Path) -> pd.DataFrame:
     """
     df_facility = pd.read_csv(file_path)
     # 建物と部屋番号から部屋の名前を作成
-    df_facility['施設名'] = df_facility['施設名'].str.cat(df_facility['講義室'], sep='_').unique().tolist()
+    df_facility['rooms'] = df_facility['施設名'].str.cat(df_facility['講義室'], sep='_').unique().tolist()
     return df_facility
 
 def get_dfs(files_path: List[Path]) -> Dict[str, pd.DataFrame]:
@@ -73,7 +73,7 @@ def define_main_sets(df: pd.DataFrame) -> Tuple[Set[str], Set[int], Set[str], Se
     periods = [w + t for w in weekdays for t in times]
     
     # 教室のリスト
-    rooms = df_facility['施設名'].str.cat(df_facility['講義室'], sep='_').unique().tolist()
+    rooms = df_facility['rooms'].unique().tolist()
     
     # クラスの集合
     # 厳密ではないが、まずはコースをクラスと考える

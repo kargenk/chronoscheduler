@@ -84,10 +84,10 @@ def define_constraints() -> None:
         for p in periods:
             problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
     
-    # # クラス時限制約: クラスは授業を受けられる時限が決まっている
-    # for c in courses:
-    #     for p in periods:
-    #         problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) >= cp_map.loc[c, p], f'クラス時限制約_{c}_{p}'
+    #- クラス時限制約: クラスは授業を受けられる時限が決まっている
+    for c in courses:
+        for p in periods:
+            problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) >= cp_map.loc[c, p], f'クラス時限制約_{c}_{p}'
     
     # 授業コマ数制約: 授業は指定されたコマ数回実施する必要がある
     for s in subjects:
@@ -99,21 +99,21 @@ def define_constraints() -> None:
             for r in rooms:
                 problem += x[s, p, r] <= sr_map.loc[s, r], f'授業教室制約_{s}_{p}_{r}'
     
-    # # 授業時限制約: 授業は実施できる時限が限られている
-    # for s in subjects:
-    #     for p in periods:
-    #         for r in rooms:
-    #             problem += x[s, p, r] <= sp_map.loc[s, p], f'授業時限制約_{s}_{p}_{r}'
+    #- 授業時限制約: 授業は実施できる時限が限られている
+    for s in subjects:
+        for p in periods:
+            for r in rooms:
+                problem += x[s, p, r] <= sp_map.loc[s, p], f'授業時限制約_{s}_{p}_{r}'
     
-    # # 教員時限制約: 教員は講義できる時限が決まっている
-    # for t in teachers:
-    #     for p in periods:
-    #         problem += pulp.lpSum(x[s, p, r] for s in teacher_lectures[t] r in rooms) <= tp_map[t, p], f'教員時限制約_{t}_{p}'
+    #- 教員時限制約: 教員は講義できる時限が決まっている
+    for t in teachers:
+        for p in periods:
+            problem += pulp.lpSum(x[s, p, r] for s in teacher_lectures[t] for r in rooms) <= tp_map.loc[t, p], f'教員時限制約_{t}_{p}'
     
-    # # 教室時限制約: 時限ごとに使用できる教室が決まっている
-    # for p in periods:
-    #     for r in rooms:
-    #         problem += pulp.lpSum(x[s, p, r] for s in subjects) <= pr_map.loc[p, r], f'教室時限制約_{r}_{p}'
+    #- 教室時限制約: 時限ごとに使用できる教室が決まっている
+    for p in periods:
+        for r in rooms:
+            problem += pulp.lpSum(x[s, p, r] for s in subjects) <= pr_map.loc[p, r], f'教室時限制約_{r}_{p}'
 
 def define_objective() -> None:
     """ 目的関数を定義. """
@@ -181,8 +181,8 @@ if __name__ == '__main__':
     describe()
     
     # 解く
-    print(pulp.pulpTestAll())  # 使用できるソルバ一覧
-    solver = pulp.COIN_CMD(threads=num_cores)  # timeLimit=24*60*60
+    # print(pulp.pulpTestAll())  # 使用できるソルバ一覧
+    solver = pulp.COIN_CMD(msg=1, threads=num_cores)  # timeLimit=24*60*60
     time_start = time.perf_counter()
     status = problem.solve()
     time_end = time.perf_counter()
@@ -191,13 +191,13 @@ if __name__ == '__main__':
     print(f'objective: {objective}')
     
     # 解が得られれば出力
-    if pulp.LpStatus[status] == 'Optimal':
-        with open('result.txt', 'w', encoding='utf-8') as f:
-            for r in rooms:
-                for p in periods:
-                    for s in subjects:
-                        if x[s, p, r].value() > 0.9:
-                            sp = subject_propaties[s]
-                            content = f'{r}\t{p}\t{sp[0]}\t{sp[2]}\t{sp[3]}\n'
-                            f.write(content)
-                            print(content, end='')
+    # if pulp.LpStatus[status] == 'Optimal':
+    with open(OUTPUT_DIR.joinpath('result.txt'), 'w', encoding='utf-8') as f:
+        for r in rooms:
+            for p in periods:
+                for s in subjects:
+                    if x[s, p, r].value() > 0.5:
+                        sp = subject_propaties[s]
+                        content = f'{r}\t{p}\t{s}\t{sp[0]}\t{sp[2]}\t{sp[3]}\n'
+                        f.write(content)
+                        # print(content, end='')
