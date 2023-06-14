@@ -244,6 +244,7 @@ if __name__ == '__main__':
     assert len(df_required) + len(df_required_select) + len(df_option) + len(df_req_sel_re) == len(df_first)
     
     # 集合の定義
+    df_required = df_first
     subjects, periods, rooms, courses, teachers = define_main_sets(df_required)
     
     # 辞書の定義
