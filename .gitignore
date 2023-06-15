@@ -160,6 +160,8 @@ cython_debug/
 #.idea/
 
 .vscode
-data/materials
-data/timetable_2023
 materials
+/data/*
+/outputs/*
+!/data/M/
+!/outputs/M/

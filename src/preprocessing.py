@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Set, Tuple
 
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 
 
 def get_facility(file_path: Path) -> pd.DataFrame:
@@ -104,11 +105,11 @@ def define_main_dicts(df: pd.DataFrame) -> Tuple[Dict[str, List[str]], Dict[str,
     course_lectures = defaultdict(list)
     for code in subjects:
         data = df[df['授業コード'] == code]
-        _, lecture_name, _, _, duration, _courses, _, _, _, _teachers = data.values[0]
+        _, lecture_name, _, status, duration, _courses, degree, _class, _, _teachers = data.values[0]
         # 講義名の英数字は半角にカタカナは全角化、不要な空白は除去
         lecture_name = unicodedata.normalize('NFKC', lecture_name.title().strip())
         # 授業辞書
-        subject_propaties[code] = [lecture_name, _teachers, duration, _courses]
+        subject_propaties[code] = [lecture_name, _teachers, _courses, degree, _class, status, duration]
         # 科目担当辞書
         for teacher in _teachers:
             teacher_lectures[teacher].append(code)
@@ -227,59 +228,56 @@ if __name__ == '__main__':
     
     # データの読み込み
     dfs = get_dfs(files_path)
-    df = dfs['M']
-    df = preprocess(df)
     
-    # 解空間を狭める(学期ごとに分割)
-    ## 学期ごとに分割
-    df_first = df[df['開講期'] == 1]
-    df_second = df[df['開講期'] == 2]
-    df_through = df[df['開講期'] == 3]
-    assert len(df_first) + len(df_second) + len(df_through) == len(df)
-    ## 必須と選択に分割
-    df_required = df_first[df_first['必選'] == '◎']
-    df_required_select = df_first[df_first['必選'] == '□']
-    df_option = df_first[df_first['必選'] == '○']
-    df_req_sel_re = df_first[df_first['必選'] == '■']
-    assert len(df_required) + len(df_required_select) + len(df_option) + len(df_req_sel_re) == len(df_first)
-    
-    # 集合の定義
-    df_required = df_first
-    subjects, periods, rooms, courses, teachers = define_main_sets(df_required)
-    
-    # 辞書の定義
-    subject_propaties, teacher_lectures, course_lectures = define_main_dicts(df_required)
+    for department, df in tqdm(dfs.items()):
+        df = preprocess(df)
+        
+        # 解空間を狭める(学期ごとに分割)
+        ## 学期ごとに分割
+        df_first = df[df['開講期'] == 1]
+        df_second = df[df['開講期'] == 2]
+        df_through = df[df['開講期'] == 3]
+        assert len(df_first) + len(df_second) + len(df_through) == len(df)
+        
+        df_semesters = {'first': df_first, 'second': df_second}
+        
+        for semester, df_semester in df_semesters.items():
+            # 集合の定義
+            subjects, periods, rooms, courses, teachers = define_main_sets(df_semester)
+            
+            # 辞書の定義
+            subject_propaties, teacher_lectures, course_lectures = define_main_dicts(df_semester)
 
-    # 制約の定義
-    sr_map, pr_map, tp_map, sp_map, cp_map = define_constrains(df_required)
-    
-    # 集合をcsvで保存
-    save_dir = DATA_DIR.joinpath('first', 'constrains')
-    save_dir.mkdir(parents=True, exist_ok=True)
+            # 制約の定義
+            sr_map, pr_map, tp_map, sp_map, cp_map = define_constrains(df_semester)
+            
+            # 集合をcsvで保存
+            save_dir = DATA_DIR.joinpath(department, semester, 'constrains')
+            save_dir.mkdir(parents=True, exist_ok=True)
 
-    file_names = ['subjects', 'periods', 'rooms', 'courses', 'teachers']
-    sets = [subjects, periods, rooms, courses, teachers]
-    for file_name, data in zip(file_names, sets):
-        save_path = save_dir.parent.joinpath(f'{file_name}.csv')
-        with open(save_path, 'w', encoding='utf-8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(sorted(list(data)))
-    
-    # 授業情報をjsonで保存
-    dict_names = ['subject_propaties', 'teacher_lectures', 'course_lectures']
-    dicts = [subject_propaties, teacher_lectures, course_lectures]
-    for file_name, data in zip(dict_names, dicts):
-        save_path = save_dir.parent.joinpath(f'{file_name}.json')
-        with open(save_path, 'wt', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    
-    # 制約をjsonで保存
-    file_names = ['sr_map', 'pr_map', 'tp_map', 'sp_map', 'cp_map']
-    constrains = [sr_map, pr_map, tp_map, sp_map, cp_map]
-    for file_name, data in zip(file_names, constrains):
-        # NumPy配列はjson保存に非対応のためリストに変換
-        for key, value in data.items():
-            data[key] = value.tolist()
-        save_path = save_dir.joinpath(f'{file_name}.json')
-        with open(save_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+            file_names = ['subjects', 'periods', 'rooms', 'courses', 'teachers']
+            sets = [subjects, periods, rooms, courses, teachers]
+            for file_name, data in zip(file_names, sets):
+                save_path = save_dir.parent.joinpath(f'{file_name}.csv')
+                with open(save_path, 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(sorted(list(data)))
+            
+            # 授業情報をjsonで保存
+            dict_names = ['subject_propaties', 'teacher_lectures', 'course_lectures']
+            dicts = [subject_propaties, teacher_lectures, course_lectures]
+            for file_name, data in zip(dict_names, dicts):
+                save_path = save_dir.parent.joinpath(f'{file_name}.json')
+                with open(save_path, 'wt', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)
+            
+            # 制約をjsonで保存
+            file_names = ['sr_map', 'pr_map', 'tp_map', 'sp_map', 'cp_map']
+            constrains = [sr_map, pr_map, tp_map, sp_map, cp_map]
+            for file_name, data in zip(file_names, constrains):
+                # NumPy配列はjson保存に非対応のためリストに変換
+                for key, value in data.items():
+                    data[key] = value.tolist()
+                save_path = save_dir.joinpath(f'{file_name}.json')
+                with open(save_path, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=2)

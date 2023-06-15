@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 import numpy as np
 import pandas as pd
 import pulp
+from tqdm import tqdm
 
 
 def read_one_col_csv(file_path: Path) -> List[str]:
@@ -69,6 +70,8 @@ def define_constraints() -> None:
     global sr_map
     global tp_map
     
+    ##### 物理的な制約 #####
+    
     # 基本制約: 同じ時間の同じ教室に複数の授業を割り当てない
     for p in periods:
         for r in rooms:
@@ -79,26 +82,33 @@ def define_constraints() -> None:
         for p in periods:
             problem += pulp.lpSum(x[s, p, r] for s in teacher_lectures[t] for r in rooms) <= 1, f'教員制約_{t}_{p}'
     
-    # クラス基本制約: クラスは同じ時間に複数の授業を受けられない
-    for c in courses:
+    # 授業教室制約: 授業は使用できる教室が限られている
+    for s in subjects:
         for p in periods:
-            problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
+            for r in rooms:
+                problem += x[s, p, r] <= sr_map.loc[s, r], f'授業教室制約_{s}_{p}_{r}'
+    
+    # TODO: クラスを学年、組にまで細分化して再定義 -> 学年、組における包含関係をどう扱うかが問題
+    # # クラス基本制約: クラスは同じ時間に複数の授業を受けられない
+    # # (被りありに制約を緩和しないとInfeasible: 実行不可能)
+    # for c in courses:
+    #     for p in periods:
+    #         problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
+    
+    ##### 制約 #####
+    
+    # TODO: 「クラスは同じ時間に複数の必須授業を受けられない」制約
+    
+    # 授業コマ数制約: 授業は指定されたコマ数回実施する必要がある
+    for s in subjects:
+        problem += pulp.lpSum(x[s, p, r] for p in periods for r in rooms) == subject_propaties[s][6], f'授業コマ数制約_{s}'
     
     # #- クラス時限制約: クラスは授業を受けられる時限が決まっている
     # for c in courses:
     #     for p in periods:
     #         problem += pulp.lpSum(x[s, p, r] for s in course_lectures[c] for r in rooms) >= cp_map.loc[c, p], f'クラス時限制約_{c}_{p}'
     
-    # 授業コマ数制約: 授業は指定されたコマ数回実施する必要がある
-    # この制約を入れるとInfeasible(実行不可能になる)が、緩和して指定されたコマ数以下にすると実行可能
-    for s in subjects:
-        problem += pulp.lpSum(x[s, p, r] for p in periods for r in rooms) <= subject_propaties[s][2], f'授業コマ数制約_{s}'
-    
-    # 授業教室制約: 授業は使用できる教室が限られている
-    for s in subjects:
-        for p in periods:
-            for r in rooms:
-                problem += x[s, p, r] <= sr_map.loc[s, r], f'授業教室制約_{s}_{p}_{r}'
+    ##### 要望による制約 #####
     
     # #- 授業時限制約: 授業は実施できる時限が限られている
     # for s in subjects:
@@ -143,64 +153,71 @@ def describe() -> None:
     # print(problem)
 
 if __name__ == '__main__':
-    DATA_DIR = Path(__file__).parents[1].joinpath('data', 'first')
-    CONSTRAINS_DIR = DATA_DIR.joinpath('constrains')
-    OUTPUT_DIR = Path(__file__).parents[1].joinpath('outputs')
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    num_cores = multiprocessing.cpu_count()
-    
-    # 集合の読み込み
-    subjects = read_one_col_csv(DATA_DIR.joinpath('subjects.csv'))
-    periods = read_one_col_csv(DATA_DIR.joinpath('periods.csv'))
-    rooms = read_one_col_csv(DATA_DIR.joinpath('rooms.csv'))
-    courses = read_one_col_csv(DATA_DIR.joinpath('courses.csv'))
-    teachers = read_one_col_csv(DATA_DIR.joinpath('teachers.csv'))
-    
-    # 授業情報(辞書)の読み込み
-    subject_propaties = read_json(DATA_DIR.joinpath('subject_propaties.json'))
-    teacher_lectures = read_json(DATA_DIR.joinpath('teacher_lectures.json'))
-    course_lectures = read_json(DATA_DIR.joinpath('course_lectures.json'))
-    
-    # 制約の読み込み
-    sr_map = read_json(CONSTRAINS_DIR.joinpath('sr_map.json'), is_constrain=True, cols=rooms)
-    pr_map = read_json(CONSTRAINS_DIR.joinpath('pr_map.json'), is_constrain=True, cols=rooms)
-    tp_map = read_json(CONSTRAINS_DIR.joinpath('tp_map.json'), is_constrain=True, cols=periods)
-    sp_map = read_json(CONSTRAINS_DIR.joinpath('sp_map.json'), is_constrain=True, cols=periods)
-    cp_map = read_json(CONSTRAINS_DIR.joinpath('cp_map.json'), is_constrain=True, cols=periods)
-    
-    # 最大化問題を定義
-    problem = pulp.LpProblem(name='lp', sense=pulp.LpMaximize)
-    
-    # 変数の定義
-    x = {}
-    for s in subjects:
-        for p in periods:
-            for r in rooms:
-                x[s, p, r] = pulp.LpVariable(f'x({s}, {p}, {r})', 0, 1, pulp.LpInteger)
+    departments = ['M', 'E', 'C', 'V', 'R', 'H', 'B', 'I', 'N', 'D', 'U', 'L', 'A']
+    semesters = ['first', 'second']
+    for department in tqdm(departments[1:]):
+        for semester in semesters:
+            data_dir = Path(__file__).parents[1].joinpath('data', department, semester)
+            constraints_dir = data_dir.joinpath('constrains')
+            output_dir = Path(__file__).parents[1].joinpath('outputs', department, semester)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            num_cores = multiprocessing.cpu_count()
+            
+            # 集合の読み込み
+            subjects = read_one_col_csv(data_dir.joinpath('subjects.csv'))
+            periods = read_one_col_csv(data_dir.joinpath('periods.csv'))
+            rooms = read_one_col_csv(data_dir.joinpath('rooms.csv'))
+            courses = read_one_col_csv(data_dir.joinpath('courses.csv'))
+            teachers = read_one_col_csv(data_dir.joinpath('teachers.csv'))
+            
+            # 授業情報(辞書)の読み込み
+            subject_propaties = read_json(data_dir.joinpath('subject_propaties.json'))
+            teacher_lectures = read_json(data_dir.joinpath('teacher_lectures.json'))
+            course_lectures = read_json(data_dir.joinpath('course_lectures.json'))
+            
+            # 制約の読み込み
+            sr_map = read_json(constraints_dir.joinpath('sr_map.json'), is_constrain=True, cols=rooms)
+            pr_map = read_json(constraints_dir.joinpath('pr_map.json'), is_constrain=True, cols=rooms)
+            tp_map = read_json(constraints_dir.joinpath('tp_map.json'), is_constrain=True, cols=periods)
+            sp_map = read_json(constraints_dir.joinpath('sp_map.json'), is_constrain=True, cols=periods)
+            cp_map = read_json(constraints_dir.joinpath('cp_map.json'), is_constrain=True, cols=periods)
+            
+            # 最大化問題を定義
+            problem = pulp.LpProblem(name='lp', sense=pulp.LpMaximize)
+            
+            # 変数の定義
+            x = {}
+            for s in subjects:
+                for p in periods:
+                    for r in rooms:
+                        x[s, p, r] = pulp.LpVariable(f'x({s}, {p}, {r})', 0, 1, pulp.LpInteger)
 
-    # 制約条件, 目的関数を定義して問題のサイズを出力
-    define_constraints()
-    define_objective()
-    describe()
-    
-    # 解く
-    # print(pulp.pulpTestAll())  # 使用できるソルバ一覧
-    solver = pulp.COIN_CMD(msg=1, threads=num_cores)  # timeLimit=24*60*60
-    time_start = time.perf_counter()
-    status = problem.solve()
-    time_end = time.perf_counter()
-    objective = pulp.value(problem.objective)
-    print(f'Status: {pulp.LpStatus[status]}, Time: {time_end - time_start} [sec]')
-    print(f'objective: {objective}')
-    
-    # 解が得られれば出力
-    # if pulp.LpStatus[status] == 'Optimal':
-    with open(OUTPUT_DIR.joinpath('result.txt'), 'w', encoding='utf-8') as f:
-        for r in rooms:
-            for p in periods:
-                for s in subjects:
-                    if x[s, p, r].value() > 0.5:
-                        sp = subject_propaties[s]
-                        content = f'{r}\t{p}\t{s}\t{sp[0]}\t{sp[2]}\t{sp[3]}\n'
-                        f.write(content)
-                        # print(content, end='')
+            # 制約条件, 目的関数を定義して問題のサイズを出力
+            define_constraints()
+            define_objective()
+            describe()
+            
+            # 解く
+            # print(pulp.pulpTestAll())  # 使用できるソルバ一覧, デフォルトはsite-packages\pulp\solverdir\cbc\win\64\cbc.exe
+            solver = pulp.COIN_CMD(msg=1, threads=num_cores)  # timeLimit=24*60*60
+            time_start = time.perf_counter()
+            status = problem.solve()
+            time_end = time.perf_counter()
+            objective = pulp.value(problem.objective)  # 理想は授業コード数(前期は227)
+            print(f'Status: {pulp.LpStatus[status]}, Time: {time_end - time_start} [sec]')
+            print(f'objective: {objective}')
+            
+            # 解が得られれば出力
+            if pulp.LpStatus[status] == 'Optimal':
+                with open(output_dir.joinpath('result.csv'), 'w', encoding='utf-8', newline='') as f:
+                    writer = csv.writer(f)
+                    contents = []
+                    for r in rooms:
+                        for p in periods:
+                            for s in subjects:
+                                if x[s, p, r].value() > 0.5:
+                                    sp = subject_propaties[s]
+                                    # [授業コード, 講義名, 講師, 部屋, 時限, コース, 学年, 組, 種別, コマ数]
+                                    content = [s, sp[0], sp[1], r, p, sp[2], sp[3], sp[4], sp[5], sp[6]]
+                                    contents.append(content)
+                    writer.writerows(contents)
