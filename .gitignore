@@ -162,6 +162,7 @@ cython_debug/
 .vscode
 materials
 /data/*
-/outputs/*
 !/data/M/
+environments/.dockerenv
+/outputs/*
 !/outputs/M/
