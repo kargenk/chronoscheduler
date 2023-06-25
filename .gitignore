@@ -162,7 +162,8 @@ cython_debug/
 .vscode
 materials
 /data/*
-!/data/M/
+!/data/toy/
 environments/.dockerenv
 /outputs/*
-!/outputs/M/
+!/outputs/toy/
+solver
