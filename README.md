@@ -15,7 +15,7 @@ ChronoScheduler is a tool of timetable optimization.
 ## 🌲Directory
 <pre>
 chronoscheduler
-├───api                   : フロントエンド
+├───api                  : フロントエンド
 │   ├───static           : CSSファイル
 │   └───templates        : HTMLファイル
 │
@@ -23,14 +23,14 @@ chronoscheduler
 │   └───toy              : 授業情報、時限、教室ファイル
 │       └───constraints  : 制約ファイル
 │
-├───environments          : Dockerfileなどの実行環境
+├───environments         : Dockerfileなどの実行環境
 │
-├───notebooks             : 実験と可視化用ノートブック
+├───notebooks            : 実験と可視化用ノートブック
 │
 ├───outputs
 │   └───toy              : 最適化後の時間割ファイル
 │
-└───src                   : ソースコード
+└───src                  : ソースコード
 </pre>
 
 ## ⚙️Installation
@@ -81,7 +81,6 @@ docker compose up
 
 Check server response:
 ```bash
-# Create Docker environment
 curl localhost:8000/test
 ```
 
@@ -90,20 +89,19 @@ Returns:
 {'message': 'ChronoScheduler is running!'}
 ```
 
-**Note**
-API Docs endpoint:
-```bash
-localhost:8000/docs
-```
+> **Note**
+API Docs endpoint: `localhost:8000/docs`
 
 ## 📝Note
 Only integer programming is supported yet...
 
 ## 🚀Updates
+**2023.06.26**
+- add Front-End (/test, /timetable endpoint)
 **2023.06.25**
 - Readme update
 
-## 📨Authors
+## 📨📧Authors
 kargenk a.k.a **gengen**(https://twitter.com/gengen_ml)
 
 ## ©License
