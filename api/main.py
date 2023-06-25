@@ -4,7 +4,7 @@ app = FastAPI()
 
 @app.get('/test')
 async def hello():
-    return {'message': 'Running ChronoScheduler!'}
+    return {'message': 'ChronoScheduler is running!'}
 
 @app.get('/timetable')
 async def view_result():

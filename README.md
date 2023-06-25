@@ -1,7 +1,7 @@
 # ChronoScheduler
 ChronoScheduler is a tool of timetable optimization.
 
-# Requirements
+# 🛠Requirements
 * python = "^3.10"
 * PuLP = "^2.7.0"
 * pandas = "^2.0.2"
@@ -30,20 +30,20 @@ chronoscheduler
 └───src                   : ソースコード
 </pre>
 
-# 💻Installation
+# ⚙️Installation
 Clone this repository.
 ```bash
 git clone https://github.com/kargenk/chronoscheduler.git
 ```
 
 ## Using Poetry
+Install Poetry:
 ```bash
 # Install the Poetry dependency management tool, skip if installed
 # Reference: https://python-poetry.org/docs/#installation
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-# Usage
 Create environment with Poetry:
 ```bash
 cd chronoscheduler/src
@@ -53,6 +53,7 @@ poetry shell
 poetry install
 ```
 
+# 💻Usage
 Make mock data and solve the problem:
 ```bash
 # preparation data for Linear Programing
@@ -64,7 +65,7 @@ python integer_programming.py
 When you execute `mock_data.py`, you can see mock data files in `data/toy`.
 And executing `integer_programming.py`, also see optimized timetable file in `outputs/toy/`.
 
-## Launch API server with Docker
+## Launch API server with Docker🐳
 ```bash
 cd chronoscheduler/environments
 
@@ -83,18 +84,18 @@ curl localhost:8000/test
 
 Returns:
 ```bash
-{"message":"Running ChronoScheduler!"}
+{'message': 'ChronoScheduler is running!'}
 ```
 
 # 📝Note
-Only one special type of pre-processing is supported yet...
+Only integer programming is supported yet...
 
 # 🚀Updates
 **2023.06.25**
 - Readme update
 
-# Author
-kargenk(**gengen**)
+# 📨Authors
+kargenk a.k.a **gengen**(https://twitter.com/gengen_ml)
 
 # ©License
 ChronoScheduler is under [MIT licence](https://en.wikipedia.org/wiki/MIT_License)
