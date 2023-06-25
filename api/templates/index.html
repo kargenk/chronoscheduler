@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>ChronoScheduler</title>
+        <!-- <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet"> -->
+    </head>
+
+    <body>
+        <h1>ChronoScheduler(時間割最適化＆表示アプリ)</h1>
+
+        <form method="get" action="/timetable">
+            <label for="category">種別：</label>
+            <select name="category" id="category">
+                <option value="">全て</option>
+                <option value="必須">必須</option>
+                <option value="選択">選択</option>
+            </select>
+
+            <label for="classroom">教室：</label>
+            <select name="classroom" id="classroom">
+                <option value="">全て</option>
+                <option value="A号館_001">A号館_001</option>
+                <option value="A号館_002">A号館_002</option>
+                <option value="A号館_003">A号館_003</option>
+            </select>
+
+            <label for="period">時限：</label>
+            <select name="period" id="period">
+                <option value="">全て</option>
+                <option value="月1">月1</option>
+                <option value="月2">月2</option>
+                <option value="月3">月3</option>
+            </select>
+
+            <button type="submit">フィルタ</button>
+        </form>
+
+        <p>以下は時間割の表です。</p>
+        {{df_html | safe}}
+    </body>
+
+</html>

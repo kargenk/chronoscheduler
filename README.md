@@ -1,7 +1,7 @@
 # ChronoScheduler
 ChronoScheduler is a tool of timetable optimization.
 
-# 🛠Requirements
+## 🛠Requirements
 * python = "^3.10"
 * PuLP = "^2.7.0"
 * pandas = "^2.0.2"
@@ -10,11 +10,14 @@ ChronoScheduler is a tool of timetable optimization.
 * xlrd = "^2.0.1"
 * fastapi = "^0.98.0"
 * uvicorn = {extras = ["standard"], version = "^0.22.0"}
+* jinja2 = "^3.1.2"
 
-# 🌲Directory
+## 🌲Directory
 <pre>
 chronoscheduler
 ├───api                   : フロントエンド
+│   ├───static           : CSSファイル
+│   └───templates        : HTMLファイル
 │
 ├───data
 │   └───toy              : 授業情報、時限、教室ファイル
@@ -30,13 +33,13 @@ chronoscheduler
 └───src                   : ソースコード
 </pre>
 
-# ⚙️Installation
+## ⚙️Installation
 Clone this repository.
 ```bash
 git clone https://github.com/kargenk/chronoscheduler.git
 ```
 
-## Using Poetry
+### Using Poetry
 Install Poetry:
 ```bash
 # Install the Poetry dependency management tool, skip if installed
@@ -53,7 +56,7 @@ poetry shell
 poetry install
 ```
 
-# 💻Usage
+## 💻Usage
 Make mock data and solve the problem:
 ```bash
 # preparation data for Linear Programing
@@ -65,7 +68,7 @@ python integer_programming.py
 When you execute `mock_data.py`, you can see mock data files in `data/toy`.
 And executing `integer_programming.py`, also see optimized timetable file in `outputs/toy/`.
 
-## Launch API server with Docker🐳
+### Launch API server with Docker🐳
 ```bash
 cd chronoscheduler/environments
 
@@ -87,15 +90,21 @@ Returns:
 {'message': 'ChronoScheduler is running!'}
 ```
 
-# 📝Note
+**Note**
+API Docs endpoint:
+```bash
+localhost:8000/docs
+```
+
+## 📝Note
 Only integer programming is supported yet...
 
-# 🚀Updates
+## 🚀Updates
 **2023.06.25**
 - Readme update
 
-# 📨Authors
+## 📨Authors
 kargenk a.k.a **gengen**(https://twitter.com/gengen_ml)
 
-# ©License
+## ©License
 ChronoScheduler is under [MIT licence](https://en.wikipedia.org/wiki/MIT_License)
