@@ -63,6 +63,7 @@ def define_constraints() -> None:
     global teachers
     # 辞書
     global course_lectures
+    global course_compulsoly_lectures
     global teacher_lectures
     global lecture_properties
     # 制約
@@ -90,18 +91,18 @@ def define_constraints() -> None:
             for r in rooms:
                 problem += x[l, p, r] <= lr_map.loc[l, r], f'授業教室制約_{l}_{p}_{r}'
     
-    # クラス基本制約: クラスは同じ時間に複数の授業を受けられない
-    # (被りありに制約を緩和しないとInfeasible: 実行不可能)
-    for c in courses:
-        for p in periods:
-            problem += pulp.lpSum(x[l, p, r] for l in course_lectures[c] for r in rooms) <= 2, f'クラス基本制約_{c}_{p}'
-    
-    ##### その他の制約 #####
-    
-    # # TODO: 「クラスは同じ時間に複数の必須授業を受けられない」制約
+    # # クラス基本制約: クラスは同じ時間に複数の授業を受けられない, ~高校用
+    # # (大学レベルの講義数の場合、被りありに制約を緩和しないとInfeasible: 実行不可能)
     # for c in courses:
     #     for p in periods:
-    #         problem += pulp.lpSum(x[l, p, r] for l in course_lectures[c] for r in rooms) <= 1, f'講義制約_'
+    #         problem += pulp.lpSum(x[l, p, r] for l in course_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
+    
+    # TODO: 「クラスは同じ時間に複数の必須授業を受けられない」制約, 大学用
+    for c in courses:
+        for p in periods:
+            problem += pulp.lpSum(x[l, p, r] for l in course_compulsoly_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
+    
+    ##### その他の制約 #####
     
     # 授業コマ数制約: 授業は指定されたコマ数回実施する必要がある
     for l in lectures:
@@ -178,6 +179,7 @@ if __name__ == '__main__':
     lecture_properties = read_json(data_dir.joinpath('lecture_properties.json'))
     teacher_lectures = read_json(data_dir.joinpath('teacher_lectures.json'))
     course_lectures = read_json(data_dir.joinpath('course_lectures.json'))
+    course_compulsoly_lectures = read_json(data_dir.joinpath('course_compulsoly_lectures.json'))
     
     # 制約の読み込み
     lr_map = read_json(constraints_dir.joinpath('lr_map.json'), is_constrain=True, cols=rooms)
@@ -210,7 +212,7 @@ if __name__ == '__main__':
     time_start = time.perf_counter()
     status = problem.solve()
     time_end = time.perf_counter()
-    objective = pulp.value(problem.objective)  # 理想は授業コード数(モックデータでは250)
+    objective = pulp.value(problem.objective)  # 理想は総コマ数(モックデータでは299)
     print(f'Status: {pulp.LpStatus[status]}, Time: {time_end - time_start} [sec]')
     print(f'objective: {objective}')
     

@@ -66,11 +66,14 @@ def make_main_data(data_dir: Path,
     num_students = [50, 70, 80, 100, 150, 200, 300]
     
     # ランダムに選択する際の確率
-    prob_cat = [0.25, 0.75]        # 種別(必須と選択)の割合
     prob_dur = [0.85, 0.14, 0.01]  # コマ数(1, 2, 3コマ)の割合
     prob_course = [0.40, 0.60]     # コース(1コースと複数コース)の割合
     prob_teacher = [0.85, 0.15]    # 講師人数(一人と複数人)の割合
+    # 推定受講人数(50, 70, 80, 100, 150, 200, 300人)の割合
     prob_students = [0.05, 0.50, 0.20, 0.15, 0.04, 0.04, 0.02]
+    # 種別(必須と選択)の割合, 必須を仮に20個とする
+    compulsory_ratio = 20 / len(codes)
+    prob_cat = [compulsory_ratio, 1 - compulsory_ratio]
     
     # モックデータをランダムに作成
     cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数']
@@ -112,7 +115,8 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str],
     授業とコース、授業と教員の紐づけを行う.
     lecture_properties: 授業の情報
     teacher_lectures: 教員が受け持っている授業リスト
-    course_lectures: コースが受ける授業のリスト
+    course_lectures: コースが受ける全授業のリスト
+    course_compulsory_lectures: コースが受けなければならない必修授業のリスト
 
     Args:
         data_dir (Path): 保存先ディレクトリ
@@ -123,6 +127,7 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str],
     """
     teacher_lectures = defaultdict(list)
     course_lectures = defaultdict(list)
+    course_compulsoly_lectures = defaultdict(list)
     for code in codes:
         data = df[df['授業コード'] == code]
         _, lecture_name, category, courses, teachers, duration, num_expected = data.values[0]
@@ -138,10 +143,16 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str],
         # クラス授業辞書
         for course in courses:
             course_lectures[course].append(code)
+        # クラス必修授業辞書
+        if category == '必須':
+            for course in courses:
+                course_compulsoly_lectures[course].append(code)
     
     # 紐づけ情報をjsonで保存
-    dict_names = ['lecture_properties', 'teacher_lectures', 'course_lectures']
-    dicts = [lecture_properties, teacher_lectures, course_lectures]
+    dict_names = ['lecture_properties', 'teacher_lectures',
+                  'course_lectures', 'course_compulsoly_lectures']
+    dicts = [lecture_properties, teacher_lectures,
+             course_lectures, course_compulsoly_lectures]
     for file_name, data in zip(dict_names, dicts):
         save_path = data_dir.joinpath(f'{file_name}.json')
         with open(save_path, 'w', encoding='utf-8') as f:
