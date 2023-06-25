@@ -1,0 +1,14 @@
+version: '3'
+services:
+  chronoscheduler-front:
+    build:
+      context: ../
+      dockerfile: environments/Dockerfile
+    volumes:
+      - .dockerenv:/chronoscheduler/.venv
+      - ../:/chronoscheduler
+    ports:
+      - 8000:8000  # Host:Docker
+      - 8888:8888
+    environment:
+      - WATCHFILES_FORCE_POLLING=true  # ホットリロードするため

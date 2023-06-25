@@ -167,3 +167,5 @@ environments/.dockerenv
 /outputs/*
 !/outputs/toy/
 solver
+src/kait
+notebooks/kait

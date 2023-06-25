@@ -232,7 +232,7 @@ def make_constraints(data_dir: Path,
 
 if __name__ == '__main__':
     np.random.seed(42)
-    DATA_DIR = Path(__file__).parents[2].joinpath('data', 'toy')
+    DATA_DIR = Path(__file__).parents[1].joinpath('data', 'toy')
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     
     # 授業と教員のリスト

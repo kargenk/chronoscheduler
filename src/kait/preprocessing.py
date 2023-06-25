@@ -218,7 +218,7 @@ def define_constrains(df: pd.DataFrame) -> Tuple[Dict[str, Any]]:
     return sr_map, pr_map, tp_map, sp_map, cp_map
 
 if __name__ == '__main__':
-    DATA_DIR = Path(__file__).parents[1].joinpath('data')
+    DATA_DIR = Path(__file__).parents[2].joinpath('data')
     files_path = list(DATA_DIR.joinpath('timetable_2023').glob('*.xlsx'))
     pattern = re.compile('[A-Z]')
     
