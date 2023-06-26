@@ -1,59 +1,20 @@
 <html>
   <head>
     <title>ChronoScheduler</title>
-    <!-- <link href="{{ url_for('static', path='/styles.css') }}" rel="stylesheet"> -->
   </head>
 
   <body>
     <h1>ChronoScheduler(時間割最適化＆表示アプリ)</h1>
 
-    <form method="get" action="/timetable">
-        <label for="course">コース：</label>
-        <select name="course" id="course">
-          <option value="">全て</option>
-          {% for course in courses %}
-          <option value="{{course}}">{{course}}</option>
-          {% endfor %}
-        </select>
-    
-    <form method="get" action="/timetable">
-      <label for="category">種別：</label>
-      <select name="category" id="category">
-        <option value="">全て</option>
-        {% for category in categories %}
-        <option value="{{category}}">{{category}}</option>
-        {% endfor %}
-      </select>
-
-      <form method="get" action="/timetable">
-        <label for="teacher">種別：</label>
-        <select name="teacher" id="teacher">
-          <option value="">全て</option>
-          {% for teacher in teachers %}
-          <option value="{{teacher}}">{{teacher}}</option>
-          {% endfor %}
-        </select>
-
-      <label for="room">教室：</label>
-      <select name="room" id="room">
-        <option value="">全て</option>
-        {% for room in rooms %}
-        <option value="{{room}}">{{room}}</option>
-        {% endfor %}
-      </select>
-
-      <label for="period">時限：</label>
-      <select name="period" id="period">
-        <option value="">全て</option>
-        {% for period in periods %}
-        <option value="{{period}}">{{period}}</option>
-        {% endfor %}
-      </select>
-
-      <button type="submit">フィルタ</button>
+    <form action="/solve" enctype="multipart/form-data" method="post">
+      <label for="lecture_properties">
+        授業データ(subject_properties.csv), 教室データ(rooms.csv),
+        時限データ(periods.csv)：
+      </label>
+      <input name="uploaded_files" type="file" multiple />
+      <input type="submit" />
     </form>
 
-    <p>以下は時間割の表です。</p>
-    {{df_html | safe}}
+    {% if solution_html %} {{solution_html | safe}} {% endif %}
   </body>
 </html>

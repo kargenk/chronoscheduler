@@ -11,6 +11,7 @@ ChronoScheduler is a tool of timetable optimization.
 * fastapi = "^0.98.0"
 * uvicorn = {extras = ["standard"], version = "^0.22.0"}
 * jinja2 = "^3.1.2"
+* python-multipart = "^0.0.6"
 
 ## 🌲Directory
 <pre>
@@ -97,7 +98,9 @@ Only integer programming is supported yet...
 
 ## 🚀Updates
 **2023.06.26**
-- add Front-End (/test, /timetable endpoint)
+- add /, /download/{name}, /solve(POST), endpoint
+- add /test, /timetable endpoint
+
 **2023.06.25**
 - Readme update
 
