@@ -1,6 +1,11 @@
 # ChronoScheduler
 ChronoScheduler is a tool of timetable optimization.
 
+Simply upload the file to the browser (at `/`), the timetable is created with mathematical optimization.
+And the results can be viewed at `/timetable`.
+
+![ChronoScheduler/timetable](api/img/chronoscheduler_timetable.png)
+
 ## 🛠Requirements
 * python = "^3.10"
 * PuLP = "^2.7.0"
@@ -90,6 +95,11 @@ Returns:
 {'message': 'ChronoScheduler is running!'}
 ```
 
+You can see optimized Timetable and filter by properties:
+```bash
+localhost: 8000/timetable
+```
+
 > **Note**
 API Docs endpoint: `localhost:8000/docs`
 
@@ -104,7 +114,7 @@ Only integer programming is supported yet...
 **2023.06.25**
 - Readme update
 
-## 📨📧Authors
+## 📧Authors
 kargenk a.k.a **gengen**(https://twitter.com/gengen_ml)
 
 ## ©License
