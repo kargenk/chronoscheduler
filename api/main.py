@@ -30,25 +30,21 @@ async def index(request: Request, solution_html = None):
     }
     return templates.TemplateResponse('index.html', query_dict)
 
-# @app.post('/uploadfiles/')
-# async def create_upload_files(uploaded_files: list[UploadFile] = None):
-#     if not uploaded_files[0].filename:
-#         return {'message': 'No file sent.'}
-#     else:
-#         # アップロードされたファイルを保存
-#         save_dir = BASE_DIR.parent.joinpath('data', 'uploaded')
-#         save_dir.mkdir(parents=True, exist_ok=True)
-#         for uploaded_file in uploaded_files:
-#             with open(save_dir.joinpath(uploaded_file.filename), 'wb+') as f:
-#                 shutil.copyfileobj(uploaded_file.file, f)
-#         return {'filenames': [uploaded_file.filename for uploaded_file in uploaded_files]}
+@app.post('/', response_class=HTMLResponse)
+async def index(request: Request, solution_html = None):
+    """ メインページのエンドポイント. 何もファイルが選択されずに送信ボタンがクリックされた場合. """
+    query_dict = {
+        'request': request,
+        'solution_html': solution_html
+    }
+    return templates.TemplateResponse('index.html', query_dict)
 
 @app.post('/solve', response_class=HTMLResponse)
 async def solve(request: Request, uploaded_files: list[UploadFile] = None):
     """ メインページのエンドポイント. アップロードされたデータを保存し、数理最適化を行う. """
-    # データがアップロードされていなければトップページ
+    # データがアップロードされていなければトップページにリダイレクト
     if not uploaded_files[0].filename:
-        return templates.TemplateResponse('index.html', {'request': request})
+        return RedirectResponse(url='http://localhost:8000/')
     else:
         # アップロードされたファイルを保存
         save_dir = BASE_DIR.parent.joinpath('data', 'uploaded')
@@ -65,8 +61,8 @@ async def solve(request: Request, uploaded_files: list[UploadFile] = None):
         'solution_html': solution_html
         }
         
-        # TODO: index.htmlに最適化後の時間割を表示
-        # TODO: index.htmlに/timetableへのリンクを作成
+        # TODO: index.htmlに最適化後の時間割を表示(index.htmlに追記)
+        # TODO: index.htmlに/timetableへのリンクを作成(結果をフィルタリングボタンでリンクを追加)
         
         return templates.TemplateResponse('index.html', query_dict)
 

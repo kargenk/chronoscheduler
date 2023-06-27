@@ -100,8 +100,8 @@ You can see optimized Timetable and filter by properties:
 localhost: 8000/timetable
 ```
 
-> **Note**
-API Docs endpoint: `localhost:8000/docs`
+<!-- > **Note**
+API Docs endpoint: `localhost:8000/docs` -->
 
 ## 📝Note
 Only integer programming is supported yet...

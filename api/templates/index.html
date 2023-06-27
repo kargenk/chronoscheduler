@@ -1,20 +1,35 @@
-<html>
-  <head>
-    <title>ChronoScheduler</title>
-  </head>
+{% extends "layout.html" %}
 
-  <body>
-    <h1>ChronoScheduler(時間割最適化＆表示アプリ)</h1>
+<!-- ヘッダー -->
+{% block head %}
+<title>ChronoScheduler</title>
+<!-- <link
+  rel="stylesheet"
+  type="text/css"
+  href="{{ url_for('static', path='/subpage/test.css')  }}"
+/>
+<script
+  type="text/javascript"
+  src="{{ url_for('static', path='subpage/test.js') }}"
+></script> -->
+{% endblock %}
 
-    <form action="/solve" enctype="multipart/form-data" method="post">
-      <label for="lecture_properties">
-        授業データ(subject_properties.csv), 教室データ(rooms.csv),
-        時限データ(periods.csv)：
-      </label>
-      <input name="uploaded_files" type="file" multiple />
-      <input type="submit" />
-    </form>
+<!-- 内容 -->
+{% block content %}
+<h2>ChronoScheduler(時間割最適化＆表示アプリ)</h1>
 
-    {% if solution_html %} {{solution_html | safe}} {% endif %}
-  </body>
-</html>
+<form action="/solve" enctype="multipart/form-data" method="post">
+  <label for="lecture_properties">
+    授業データ(subject_properties.csv), 教室データ(rooms.csv),
+    時限データ(periods.csv)：
+  </label>
+  <input name="uploaded_files" type="file" multiple />
+  <input type="submit" />
+</form>
+
+<!-- 最適化結果があれば表示 -->
+{% if solution_html %}
+  {{solution_html | safe}}
+{% endif %}
+
+{% endblock %}
