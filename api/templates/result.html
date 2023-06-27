@@ -55,4 +55,9 @@
 </form>
 
 <p>以下が作成された時間割です。</p>
+
+<!-- TODO: フィルタリングした時間割をダウンロードできるように実装 -->
+<input type="button" value="ダウンロード" onclick="location.href='download'" />
+
+<!-- TODO: よくみる時間割の表形式に並べて表示 -->
 {{df_html | safe}} {% endblock %}

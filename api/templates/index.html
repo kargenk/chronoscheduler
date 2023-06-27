@@ -29,6 +29,8 @@
 
 <!-- 最適化結果があれば表示 -->
 {% if solution_html %}
+  <input type="button" value="結果をフィルタリング" onclick="location.href='timetable'" />
+  <input type="button" value="ダウンロード" onclick="location.href='download'" />
   {{solution_html | safe}}
 {% endif %}
 
