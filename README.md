@@ -1,8 +1,6 @@
 # ChronoScheduler
-ChronoScheduler is a tool of timetable optimization.
-
-Simply upload the file to the browser (at `/`), the timetable is created with mathematical optimization.
-And the results can be viewed at `/timetable`.
+ChronoScheduler is an application that allows you to create timetables easily within your browser.
+Simply upload your timetable data, and let the power of mathematical optimization generate an optimal timetable automatically. You can then easily review the results by accessing the `/timetable` endpoint.
 
 ![ChronoScheduler/timetable](api/img/chronoscheduler_timetable.png)
 
