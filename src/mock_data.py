@@ -76,7 +76,6 @@ def make_main_data(data_dir: Path,
     prob_cat = [compulsory_ratio, 1 - compulsory_ratio]
     
     # モックデータをランダムに作成
-    cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数']
     subject_properties = []
     for code, name in zip(codes, names):
         duration = np.random.choice(durations, p=prob_dur)
@@ -104,6 +103,7 @@ def make_main_data(data_dir: Path,
         subject_property = [code, name, category, course, teacher, duration, num_expected]
         subject_properties.append(subject_property)
     
+    cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数']
     df = pd.DataFrame(subject_properties, columns=cols)
     df.to_csv(data_dir.joinpath('lecture_properties.csv'), index=False, header=True)
     
