@@ -77,7 +77,7 @@ async def view_result(request: Request,
     
     # 最適化した時間割データの読み込み
     cols = ['授業コード', '講義名', '対象コース', '種別', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']
-    df = pd.read_csv(output_dir.joinpath('result.csv'), header=None, names=cols)
+    df = pd.read_csv(output_dir.joinpath('result_cbc.csv'), header=None, names=cols)
     
     # 各集合の作成
     courses = set(sum([cs.strip().split(',') for cs in df['対象コース'].to_list()], []))

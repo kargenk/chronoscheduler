@@ -102,6 +102,8 @@ def define_constraints() -> None:
         for p in periods:
             problem += pulp.lpSum(x[l, p, r] for l in course_compulsoly_lectures[c] for r in rooms) <= 1, f'クラス基本制約_{c}_{p}'
     
+    # TODO: 連続授業制約: 授業によっては連続した時限で行わなければならない
+    
     ##### その他の制約 #####
     
     # 授業コマ数制約: 授業は指定されたコマ数回実施する必要がある
@@ -158,10 +160,11 @@ def describe() -> None:
     # print(problem)
 
 if __name__ == '__main__':
+    semester = 'first'
     ROOT_DIR = Path(__file__).parents[1]
-    data_dir = ROOT_DIR.joinpath('data', 'toy')
+    data_dir = ROOT_DIR.joinpath('data', 'toy', semester)
     constraints_dir = data_dir.joinpath('constraints')
-    output_dir = ROOT_DIR.joinpath('outputs', 'toy')
+    output_dir = ROOT_DIR.joinpath('outputs', 'toy', semester)
     output_dir.mkdir(parents=True, exist_ok=True)
     num_cores = multiprocessing.cpu_count()
     
@@ -169,8 +172,8 @@ if __name__ == '__main__':
     dtypes = {'授業コード': str}
     df_lecture = pd.read_csv(data_dir.joinpath('lecture_properties.csv'), dtype=dtypes)
     lectures = df_lecture['授業コード'].to_list()
-    rooms = pd.read_csv(data_dir.joinpath('rooms.csv'))['教室'].to_list()
-    periods = read_one_col_csv(data_dir.joinpath('periods.csv'))
+    rooms = pd.read_csv(data_dir.parent.joinpath('rooms.csv'))['教室'].to_list()
+    periods = read_one_col_csv(data_dir.parent.joinpath('periods.csv'))
     teachers = set(sum([ts.strip().split(',')
                         for ts in df_lecture['担当教員'].to_list()], []))
     courses = set(sum([cs.strip().split(',')
@@ -208,10 +211,10 @@ if __name__ == '__main__':
     # 解く
     # pulp.pulpTestAll()
     # print(pulp.listSolvers(onlyAvailable=True))  # 使用できるソルバ一覧
-    # solver = pulp.COIN_CMD(path='../../solver/bin/cbc', msg=True, threads=num_cores, timeLimit=10)  # timeLimit=24*60*60
-    # solver = pulp.PULP_CBC_CMD(msg=True, threads=num_cores, timeLimit=10)  # timeLimit=24*60*60
+    solver = pulp.PULP_CBC_CMD(msg=True, threads=24)  # timeLimit=24*60*60
+    # solver = pulp.SCIP_CMD()
     time_start = time.perf_counter()
-    status = problem.solve()
+    status = problem.solve(solver)
     time_end = time.perf_counter()
     objective = pulp.value(problem.objective)  # 理想は総コマ数(モックデータでは299)
     print(f'Status: {pulp.LpStatus[status]}, Time: {time_end - time_start} [sec]')

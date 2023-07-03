@@ -3,9 +3,10 @@ from pathlib import Path
 import pandas as pd
 
 if __name__ == '__main__':
+    semester = 'first'
     ROOT_DIR = Path(__file__).parents[1]
-    DATA_DIR = ROOT_DIR.joinpath('data', 'toy')
-    OUTPUT_DIR = ROOT_DIR.joinpath('outputs', 'toy')
+    DATA_DIR = ROOT_DIR.joinpath('data', 'toy', semester)
+    OUTPUT_DIR = ROOT_DIR.joinpath('outputs', 'toy', semester)
     
     # 最適化された時間割データの読み込み
     cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']

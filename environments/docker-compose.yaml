@@ -12,3 +12,9 @@ services:
       - 8888:8888
     environment:
       - WATCHFILES_FORCE_POLLING=true  # ホットリロードするため
+    cpuset: '0-23'  # 使用するCPUコアの範囲を指定
+    cpus: 24
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '24'
