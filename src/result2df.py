@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # 最適化された時間割データの読み込み
     cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']
     df = pd.read_csv(OUTPUT_DIR.joinpath('result.csv'), header=None, names=cols)
-    periods = pd.read_csv(DATA_DIR.joinpath('periods.csv')).columns.to_list()
+    periods = pd.read_csv(DATA_DIR.parent.joinpath('periods.csv')).columns.to_list()
     
     # 時限毎にサブセットに分け、最終出力形式のテーブルになるように空行を追加する
     df_subsets = {}

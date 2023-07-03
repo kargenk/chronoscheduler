@@ -76,7 +76,7 @@ def make_main_data(data_dir: Path,
     # 推定受講人数(50, 70, 80, 100, 150, 200, 300人)の割合
     prob_students = [0.05, 0.50, 0.20, 0.15, 0.04, 0.04, 0.02]
     # 種別(必須と選択)の割合
-    compulsory_ratio = 100 / len(codes)  # 必須を仮に100個とする
+    compulsory_ratio = 80 / len(codes)  # 必須を仮に80個とする
     # compulsory_ratio = 0.348
     prob_cat = [compulsory_ratio, 1 - compulsory_ratio]
     
