@@ -36,7 +36,7 @@ def make_auxilialy_data(data_dir: Path) -> tuple[pd.DataFrame, list[str]]:
     
     # 時間リスト
     days = ['月', '火', '水', '木', '金', '土']
-    times = np.arange(1, 7)
+    times = np.arange(1, 6)
     periods = [f'{d}{t}' for d in days for t in times]
     with open(data_dir.joinpath('periods.csv'), 'w', encoding='utf-8', newline='') as f:
         writer = csv.writer(f)
@@ -60,7 +60,7 @@ def make_main_data(data_dir: Path,
     Returns:
         pd.DataFrame: 作成したメインとなるデータフレーム
     """
-    # 種別、(学年)、コマ数、推定受講人数、特定使用教室、開講期
+    # 種別、(学年)、コマ数、推定受講人数、特定使用教室、開講期, 連続数
     categories = ['必須', '選択']
     durations = np.arange(1, 4)
     num_students = [50, 70, 80, 100, 150, 200, 300]
@@ -68,26 +68,39 @@ def make_main_data(data_dir: Path,
     semesters = [1, 2, 3]
     
     # ランダムに選択する際の確率
-    prob_dur = [0.85, 0.14, 0.01]  # コマ数(1, 2, 3コマ)の割合
+    prob_dur = [0.90, 0.09, 0.01]  # コマ数(1, 2, 3コマ)の割合
     prob_course = [0.40, 0.60]     # コース(1コースと複数コース)の割合
     prob_teacher = [0.85, 0.15]    # 講師人数(一人と複数人)の割合
     prob_room = [0.985, 5e-3, 5e-3, 5e-3]
-    prob_semester = [0.5, 0.45, 0.05]
+    prob_semester = [0.48, 0.47, 0.05]
     # 推定受講人数(50, 70, 80, 100, 150, 200, 300人)の割合
     prob_students = [0.05, 0.50, 0.20, 0.15, 0.04, 0.04, 0.02]
+
     # 種別(必須と選択)の割合
     compulsory_ratio = 80 / len(codes)  # 必須を仮に80個とする
     # compulsory_ratio = 0.348
     prob_cat = [compulsory_ratio, 1 - compulsory_ratio]
     
     # モックデータをランダムに作成
+    num_double = 0
+    num_triple = 0
     subject_properties = []
     for code, name in zip(codes, names):
         category = np.random.choice(categories, p=prob_cat)
-        duration = np.random.choice(durations, p=prob_dur)
         num_expected = np.random.choice(num_students, p=prob_students)
         room = np.random.choice(rooms, p=prob_room)
         semester = np.random.choice(semesters, p=prob_semester)
+        duration = np.random.choice(durations, p=prob_dur)
+        # 連続したコマで行う授業を決定(2コマ連続を20個、3コマ連続を2個とする)
+        match duration:
+            case 2:
+                sequence = 2 if num_double < 20 else None
+                num_double += 1
+            case 3:
+                sequence = 3 if num_double < 3 else None
+                num_triple += 1
+            case _:
+                sequence = None
         
         # コースの組み合わせを決定
         is_mix = (np.random.choice([True, False], p=prob_course))
@@ -107,10 +120,10 @@ def make_main_data(data_dir: Path,
             teachers = [np.random.choice(teacher_list)]
         teacher = ','.join(teachers)
         
-        subject_property = [code, name, category, course, teacher, duration, num_expected, semester, room]
+        subject_property = [code, name, category, course, teacher, duration, num_expected, semester, room, sequence]
         subject_properties.append(subject_property)
     
-    cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数', '開講期', '特定使用教室']
+    cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数', '開講期', '特定使用教室', '連続数']
     df = pd.DataFrame(subject_properties, columns=cols)
     df.to_csv(data_dir.joinpath('lecture_properties.csv'), index=False, header=True)
     
@@ -135,7 +148,7 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str]) -> None:
     course_compulsoly_lectures = defaultdict(list)
     for code in codes:
         data = df[df['授業コード'] == code]
-        _, _, category, courses, teachers, _, _, _, _ = data.values[0]
+        _, _, category, courses, teachers, _, _, _, _, _ = data.values[0]
         teachers = teachers.strip().split(',')
         courses = courses.strip().split(',')
         # 授業辞書
@@ -166,7 +179,8 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str]) -> None:
 def make_constraints(data_dir: Path,
                      df_lecture: pd.DataFrame,
                      df_room: pd.DataFrame,
-                     periods: list[str]) -> tuple[dict[str, Any]]:
+                     periods: list[str],
+                     is_continuous: bool = False) -> tuple[dict[str, Any]]:
     """
     制約を定義する関数.
         lr_map: 授業lが教室rで利用可能かを表す01行列
@@ -180,6 +194,7 @@ def make_constraints(data_dir: Path,
         df_lecture (pd.DataFrame): 授業のデータフレーム
         df_rooms (pd.DataFrame): 部屋のデータフレーム
         periods (list[str]): 時限のリスト
+        is_continuous (bool): サブ問題(連続の講義についてあらかじめ割り当てる問題)かのフラグ. Defaults to False.
 
     Returns:
         Tuple[Dict[str, Any]]: 制約
@@ -193,6 +208,7 @@ def make_constraints(data_dir: Path,
     
     # 集合
     lectures = df_lecture['授業コード']
+    triple_lectures = set(df_lecture[df_lecture['コマ数'] == 3]['授業コード'].to_list())
     teachers = set(sum([ts.strip().split(',')
                         for ts in df_lecture['担当教員'].to_list()], []))
     courses = set(sum([cs.strip().split(',')
@@ -212,7 +228,6 @@ def make_constraints(data_dir: Path,
     # 授業コードをkey, その部屋群が使用可(1) or 不可(0)を表すNumPy配列をvalueとする辞書
     for i, code in enumerate(lectures):
         lr_map[code] = lr_mat[i]
-    # TODO: semester=2(後期)の時に3(通期)で決まった講義の部屋/時限を固定にする処理
     # 指定教室がある場合その教室のみ利用可(1)に
     special_idx = df_lecture['特定使用教室'].notnull()
     for code, room in df_lecture[special_idx][['授業コード', '特定使用教室']].values:
@@ -232,7 +247,15 @@ def make_constraints(data_dir: Path,
     ### lp_map: 授業lが時限pに実施可能かを表す01行列
     lp_map = defaultdict(lambda: np.ones(num_periods, dtype=np.int8))
     for l in lectures:
-        lp_map[l] = np.ones(num_periods, dtype=np.int8)
+        if is_continuous:
+            if l in triple_lectures:
+                # 3コマの場合、各曜日の3限のみ
+                lp_map[l] = np.array([0, 0, 1, 0, 0] * 6, dtype=np.int8)
+            else:
+                # 2コマの場合、各曜日の1, 3, 4限のみ
+                lp_map[l] = np.array([1, 0, 1, 1, 0] * 6, dtype=np.int8)
+        else:
+            lp_map[l] = np.ones(num_periods, dtype=np.int8)
     
     ### cp_map: コースcが時限pに授業可能かを表す01行列
     cp_map = defaultdict(lambda: np.ones(num_periods, dtype=np.int8))
@@ -273,6 +296,7 @@ if __name__ == '__main__':
     # groups = np.arange(1, 4)
     # classes = [f'{c}-{g}' for c in course_list for g in groups]
     
+    # モックデータと制約を作成してファイルに保存
     df_room, periods = make_auxilialy_data(DATA_DIR)
     df_lecture = make_main_data(DATA_DIR, codes, names, teacher_list, course_list)
     for semester in semesters:
@@ -290,3 +314,20 @@ if __name__ == '__main__':
         # 情報のマッピングと制約定義
         make_mappings(save_dir, df_lecture[idx], codes)
         make_constraints(save_dir, df_lecture[idx], df_room, periods)
+    
+    # 連続した授業群だけ先に割り当てするために分けて保存
+    for i, name in zip(semesters, ['first', 'second']):
+        save_dir = DATA_DIR.joinpath('zeroth_continuous', name)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 該当授業のみを抽出して制約とマッピングを作成
+        continuous_idx = ((df_lecture['開講期'] == i) & df_lecture['連続数'].notnull())
+        df_continuous = df_lecture[continuous_idx]
+        make_constraints(save_dir, df_continuous, df_room, periods, is_continuous=True)
+
+        # マッピングに関しては現状では連続の制約を組めていないため、1コマの割り当て問題として解く(連続部分は後処理で追加)
+        df_continuous.loc[:, 'コマ数'] = 1
+        df_continuous.to_csv(save_dir.joinpath(f'lecture_properties.csv'),
+                             index=False, header=True)
+        codes = df_continuous['授業コード'].to_list()
+        make_mappings(save_dir, df_continuous, codes)
