@@ -68,8 +68,8 @@ class IPSolver(object):
     
     def _load_sets(self) -> None:
         # 集合の定義
-        dtypes = {'授業コード': str}
-        df_lecture = pd.read_csv(self.data_dir.joinpath('lecture_properties.csv'), dtype=dtypes)
+        dtype = {'授業コード': str}
+        df_lecture = pd.read_csv(self.data_dir.joinpath('lecture_properties.csv'), dtype=dtype)
         self.lectures = df_lecture['授業コード'].to_list()
         self.rooms = pd.read_csv(self.root_dir.joinpath('rooms.csv'))['教室'].to_list()
         self.periods = read_one_col_csv(self.root_dir.joinpath('periods.csv'))
@@ -223,12 +223,14 @@ class IPSolver(object):
             with open(self.output_dir.joinpath('result.csv'), 'w', encoding='utf-8', newline='') as f:
                 writer = csv.writer(f)
                 contents = []
+                cols = ['授業コード', '講義名', '対象コース', '種別', '担当教員',
+                        '教室', '時限', 'コマ数', '推定受講人数']
+                contents.append(cols)
                 for r in self.rooms:
                     for p in self.periods:
                         for l in self.lectures:
                             if self.x[l, p, r].value() > 0.5:
                                 lp = self.lecture_properties[l]
-                                # ['授業コード', '講義名', '対象コース', '種別', '担当教員', '教室', '時限', 'コマ数', '推定受講人数']
                                 content = [l, lp[0], lp[2], lp[1], lp[3], r, p, lp[4], lp[5]]
                                 contents.append(content)
                 writer.writerows(contents)
@@ -237,6 +239,6 @@ if __name__ == '__main__':
     ROOT_DIR = Path(__file__).parents[1].joinpath('data', 'toy')
     
     # phase is 'zeroth_continuous' if pre-solve else ''
-    solver = IPSolver(ROOT_DIR, phase='zeroth_continuous', semester='first')
+    solver = IPSolver(ROOT_DIR, phase='', semester='first')
     solver.define_problem()
     solver.solve()

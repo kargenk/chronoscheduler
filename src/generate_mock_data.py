@@ -8,12 +8,12 @@ import numpy as np
 import pandas as pd
 
 
-def make_auxilialy_data(data_dir: Path) -> tuple[pd.DataFrame, list[str]]:
+def make_auxilialy_data(data_dir: Path = None) -> tuple[pd.DataFrame, list[str]]:
     """
     時間割が決まっていない状態では授業情報に含まれないデータ群(部屋と時限)を作成して保存する.
 
     Args:
-        data_dir (Path): 保存先のディレクトリ
+        data_dir (Path): 保存先のディレクトリ. Default to None.
     
     Returns:
         Tuple[pd.DataFrame, list[str]]: 部屋情報のデータフレームと時限リスト
@@ -32,15 +32,17 @@ def make_auxilialy_data(data_dir: Path) -> tuple[pd.DataFrame, list[str]]:
     capacities[:5] = 50
     # データフレームの形式で保存
     df_rooms = pd.DataFrame({'教室': rooms, '許容人数': capacities})
-    df_rooms.to_csv(data_dir.joinpath('rooms.csv'), index=None)
+    if data_dir:
+        df_rooms.to_csv(data_dir.joinpath('rooms.csv'), index=None)
     
     # 時間リスト
     days = ['月', '火', '水', '木', '金', '土']
     times = np.arange(1, 6)
     periods = [f'{d}{t}' for d in days for t in times]
-    with open(data_dir.joinpath('periods.csv'), 'w', encoding='utf-8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(periods)
+    if data_dir:
+        with open(data_dir.joinpath('periods.csv'), 'w', encoding='utf-8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(periods)
     
     return df_rooms, periods
 

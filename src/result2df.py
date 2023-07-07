@@ -7,13 +7,17 @@ if __name__ == '__main__':
     ROOT_DIR = Path(__file__).parents[1]
     DATA_DIR = ROOT_DIR.joinpath('data', 'toy', semester)
     OUTPUT_DIR = ROOT_DIR.joinpath('outputs', 'toy', semester)
+    FIX_DIR = ROOT_DIR.joinpath('outputs', 'toy', 'zeroth_continuous')
     
     # 最適化された時間割データの読み込み
+    dtype = {'授業コード': str}
     cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']
-    df = pd.read_csv(OUTPUT_DIR.joinpath('result.csv'), header=None, names=cols)
-    periods = pd.read_csv(DATA_DIR.parent.joinpath('periods.csv')).columns.to_list()
+    df = pd.read_csv(OUTPUT_DIR.joinpath('result.csv'), dtype=dtype)
+    df_fix = pd.read_csv(FIX_DIR.joinpath(semester,'fix.csv'), dtype=dtype)
+    df = df.merge(df_fix, how='outer')
     
     # 時限毎にサブセットに分け、最終出力形式のテーブルになるように空行を追加する
+    periods = pd.read_csv(DATA_DIR.parent.joinpath('periods.csv')).columns.to_list()
     df_subsets = {}
     max_len = df['時限'].value_counts().max()
     empty_sample = pd.Series({}, dtype=object)
