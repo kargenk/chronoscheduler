@@ -91,7 +91,6 @@ def update_constraints(constraints_dir: Path,
     
     # pr_mapの更新
     for p, r in zip(df_fix['時限'], df_fix['教室']):
-        pr_map.loc[p] = 1
         pr_map.loc[p, r] = 0
     
     # tp_mapの更新

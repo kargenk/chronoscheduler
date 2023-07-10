@@ -15,6 +15,7 @@ if __name__ == '__main__':
     df = pd.read_csv(OUTPUT_DIR.joinpath('result.csv'), dtype=dtype)
     df_fix = pd.read_csv(FIX_DIR.joinpath(semester,'fix.csv'), dtype=dtype)
     df = df.merge(df_fix, how='outer')
+    df.to_csv(OUTPUT_DIR.joinpath('merged.csv'), index=False)
     
     # 時限毎にサブセットに分け、最終出力形式のテーブルになるように空行を追加する
     periods = pd.read_csv(DATA_DIR.parent.joinpath('periods.csv')).columns.to_list()

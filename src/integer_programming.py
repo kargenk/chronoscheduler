@@ -23,7 +23,7 @@ def read_one_col_csv(file_path: Path) -> List[str]:
     with open(file_path, 'r', encoding='utf-8') as f:
         reader = csv.reader(f)
         content = [row for row in reader]
-        return sorted(sum(content, []))
+        return sum(content, [])
 
 def read_json(file_path: Path, is_constraint: bool = False, cols: List[str] = None) -> Dict[str, Any]:
     """
@@ -108,10 +108,10 @@ class IPSolver(object):
             for r in self.rooms:
                 self.problem += pulp.lpSum(self.x[l, p, r] for l in self.lectures) <=1, f'基本制約_{p}_{r}'
         
-        # 教員制約: 教員は同じ時間に複数の授業を行えない
+        # 教員時限制約: 教員は同じ時間に複数の授業を行えない
         for t in self.teachers:
             for p in self.periods:
-                self.problem += pulp.lpSum(self.x[l, p, r] for l in self.teacher_lectures[t] for r in self.rooms) <= 1, f'教員制約_{t}_{p}'
+                self.problem += pulp.lpSum(self.x[l, p, r] for l in self.teacher_lectures[t] for r in self.rooms) <= self.tp_map.loc[t, p], f'教員制約_{t}_{p}'
         
         # 授業教室制約: 授業は使用できる教室が限られている
         for l in self.lectures:
@@ -131,6 +131,17 @@ class IPSolver(object):
                 for p in self.periods:
                     self.problem += pulp.lpSum(self.x[l, p, r] for l in self.course_compulsoly_lectures[c] for r in self.rooms) <= 1, f'クラス基本制約_{c}_{p}'
         
+        #- 授業時限制約: 授業は実施できる時限が限られている
+        for l in self.lectures:
+            for p in self.periods:
+                for r in self.rooms:
+                    self.problem += self.x[l, p, r] <= self.lp_map.loc[l, p], f'授業時限制約_{l}_{p}_{r}'
+        
+        #- 教室時限制約: 時限ごとに使用できる教室が決まっている
+        for p in self.periods:
+            for r in self.rooms:
+                self.problem += pulp.lpSum(self.x[l, p, r] for l in self.lectures) <= self.pr_map.loc[p, r], f'教室時限制約_{r}_{p}'
+        
         # TODO: 連続授業制約: 授業によっては連続した時限で行わなければならない
         
         ##### その他の制約 #####
@@ -146,21 +157,7 @@ class IPSolver(object):
         
         ##### 要望による制約 #####
         
-        #- 授業時限制約: 授業は実施できる時限が限られている
-        for l in self.lectures:
-            for p in self.periods:
-                for r in self.rooms:
-                    self.problem += self.x[l, p, r] <= self.lp_map.loc[l, p], f'授業時限制約_{l}_{p}_{r}'
-        
-        # #- 教員時限制約: 教員は講義できる時限が決まっている
-        # for t in self.teachers:
-        #     for p in self.periods:
-        #         self.problem += pulp.lpSum(self.x[l, p, r] for l in self.teacher_lectures[t] for r in self.rooms) <= self.tp_map.loc[t, p], f'教員時限制約_{t}_{p}'
-        
-        # #- 教室時限制約: 時限ごとに使用できる教室が決まっている
-        # for p in self.periods:
-        #     for r in self.rooms:
-        #         self.problem += pulp.lpSum(self.x[s, p, r] for s in self.subjects) <= self.pr_map.loc[p, r], f'教室時限制約_{r}_{p}'
+        # 曜日毎に科目の上限数を定める
     
     def _define_objective(self) -> None:
         """ 目的関数を定義. """
@@ -207,7 +204,8 @@ class IPSolver(object):
         # pulp.pulpTestAll()
         # print(pulp.listSolvers(onlyAvailable=True))  # 使用できるソルバ一覧
         if self.solver_name == 'cbc':
-            solver = pulp.PULP_CBC_CMD(msg=True, threads=self.num_cores)  # timeLimit=24*60*60
+            # solver = pulp.PULP_CBC_CMD(msg=True, threads=self.num_cores)  # timeLimit=24*60*60
+            solver = pulp.PULP_CBC_CMD(msg=True, options=[f'threads={self.num_cores}'])
         elif self.solver_name == 'scip':
             # Caution: failed on pulp ... orz
             solver = pulp.SCIP_CMD()
@@ -239,6 +237,6 @@ if __name__ == '__main__':
     ROOT_DIR = Path(__file__).parents[1].joinpath('data', 'toy')
     
     # phase is 'zeroth_continuous' if pre-solve else ''
-    solver = IPSolver(ROOT_DIR, phase='', semester='first')
+    solver = IPSolver(ROOT_DIR, phase='', semester='first', solver_name='cbc')
     solver.define_problem()
     solver.solve()
