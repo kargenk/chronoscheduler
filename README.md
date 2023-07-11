@@ -1,6 +1,7 @@
 # ChronoScheduler
 ChronoScheduler is an application that allows you to create timetables easily within your browser.
-Simply upload your timetable data, and let the power of mathematical optimization generate an optimal timetable automatically. You can then easily review the results by accessing the `/timetable` endpoint.
+Simply upload your timetable data, and let mathematical optimization generate an optimal timetable automatically.
+You can then easily review the results by accessing the `/timetable` endpoint.
 
 ![ChronoScheduler/timetable](api/img/chronoscheduler_timetable.png)
 
@@ -29,8 +30,6 @@ chronoscheduler
 │
 ├───environments         : Dockerfileなどの実行環境
 │
-├───notebooks            : 実験と可視化用ノートブック
-│
 ├───outputs
 │   └───toy              : 最適化後の時間割ファイル
 │
@@ -55,21 +54,22 @@ Create environment with Poetry:
 ```bash
 cd chronoscheduler/src
 
-# Activate venv and Install the project dependencies
-poetry shell
+# Install the project dependencies and Activate
 poetry install
+poetry shell
 ```
 
 ## 💻Usage
 Make mock data and solve the problem:
 ```bash
 # preparation data for Linear Programing
-python mock_data.py
+python generate_mock_data.py
 
 # Solve the problem
 python integer_programming.py
 ```
 When you execute `mock_data.py`, you can see mock data files in `data/toy`.
+`zeroth_continuous`, `first`, and `second` mean continuous lecture, first semester, and second semester respectively.
 And executing `integer_programming.py`, also see optimized timetable file in `outputs/toy/`.
 
 ### Launch API server with Docker🐳
@@ -102,15 +102,29 @@ localhost: 8000/timetable
 API Docs endpoint: `localhost:8000/docs` -->
 
 ## 📝Note
+### Formulation
 Only integer programming is supported yet...
 
+### Execution Environments
+- OS: Ubuntu 20.04
+- CPU: 12th Gen Intel(R) Core(TM) i9-12900(16 cores, 24 threads)
+- Memory: 64GB
+
+### ⌛Calculation Time
+In the above environment, takes 1400~3000 \[sec\]
+![calculation Time](api/img/calculation_time.png)
+
 ## 🚀Updates
+**2023.07.11**
+- add constraints on number of lectures per period
+- add SCIP Solver environment, but not integrated
+
+**2023.07.10**
+- add pre-solve(for consecutive lectures) and update the constraints process
+
 **2023.06.26**
 - add /, /download/{name}, /solve(POST), endpoint
 - add /test, /timetable endpoint
-
-**2023.06.25**
-- Readme update
 
 ## 📧Authors
 kargenk a.k.a **gengen**(https://twitter.com/gengen_ml)
