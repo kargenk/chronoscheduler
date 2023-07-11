@@ -97,6 +97,8 @@ class IPSolver(object):
                                 is_constraint=True, cols=self.periods)
         self.cp_map = read_json(self.constraints_dir.joinpath('cp_map.json'),
                                 is_constraint=True, cols=self.periods)
+        self.p_lowers = read_json(self.constraints_dir.joinpath('p_lowers.json'))
+        self.p_uppers = read_json(self.constraints_dir.joinpath('p_uppers.json'))
     
     def _define_constraints(self) -> None:
         """ 各制約を定義する. """
@@ -158,6 +160,9 @@ class IPSolver(object):
         ##### 要望による制約 #####
         
         # 曜日毎に科目の上限数を定める
+        for p in self.periods:
+            self.problem += pulp.lpSum(self.x[l, p, r] for l in self.lectures for r in self.rooms) >= self.p_lowers[p], f'時限最小授業数制約_{p}'
+            self.problem += pulp.lpSum(self.x[l, p, r] for l in self.lectures for r in self.rooms) <= self.p_uppers[p], f'時限最大授業数制約_{p}'
     
     def _define_objective(self) -> None:
         """ 目的関数を定義. """

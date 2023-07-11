@@ -169,4 +169,3 @@ environments/.dockerenv
 solver
 src/kait
 notebooks/kait
-_envs

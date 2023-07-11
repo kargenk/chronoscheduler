@@ -190,6 +190,8 @@ def make_constraints(data_dir: Path,
         tp_map: 教員tが時限pに授業可能かを表す01行列
         lp_map: 授業lが時限pに実施可能かを表す01行列
         cp_map: コースcが時限pに授業可能かを表す01行列
+        p_lowers: 時限pに実施する最小授業数
+        p_uppers: 時限pに実施する最大授業数
 
     Args:
         data_dir (Path): 保存先ディレクトリ
@@ -255,7 +257,9 @@ def make_constraints(data_dir: Path,
                 lp_map[l] = np.array([0, 0, 1, 0, 0] * 6, dtype=np.int8)
             else:
                 # 2コマの場合、各曜日の1, 3, 4限のみ
-                lp_map[l] = np.array([1, 0, 1, 1, 0] * 6, dtype=np.int8)
+                # しかし、1コマで割り当てして後処理で2コマ目を追加しているため、4限で教員が被る可能性が存在
+                # そのため、暫定的に1, 3限のみにして対処
+                lp_map[l] = np.array([1, 0, 1, 0, 0] * 6, dtype=np.int8)
         else:
             lp_map[l] = np.ones(num_periods, dtype=np.int8)
     
@@ -264,13 +268,25 @@ def make_constraints(data_dir: Path,
     for c in courses:
         cp_map[c] = np.ones(num_periods, dtype=np.int8)
     
+    ### p_lowers: 時限pに実施する最小授業数(= 平均 - 1% + 2 [個] )
+    ### p_uppers: 時限pに実施する最大授業数(= 平均 + 1% + 2 [個] )
+    p_lowers = defaultdict(lambda: np.zeros(num_periods, dtype=np.int8))
+    p_uppers = defaultdict(lambda: np.full_like(p_lowers, num_lectures, dtype=np.int8))
+    for p in periods:
+        if num_lectures <= num_periods:
+            p_lowers[p] = 0
+        else:
+            p_lowers[p] = int((num_lectures / num_periods) - num_lectures * 0.01 - 2)
+        p_uppers[p] = int((num_lectures / num_periods) + num_lectures * 0.01 + 2)
+
     # 各制約を保存
-    file_names = ['lr_map', 'pr_map', 'tp_map', 'lp_map', 'cp_map']
-    constrains = [lr_map, pr_map, tp_map, lp_map, cp_map]
-    for file_name, data in zip(file_names, constrains):
+    file_names = ['lr_map', 'pr_map', 'tp_map', 'lp_map', 'cp_map', 'p_lowers', 'p_uppers']
+    constraints = [lr_map, pr_map, tp_map, lp_map, cp_map, p_lowers, p_uppers]
+    for file_name, data in zip(file_names, constraints):
         # NumPy配列はjson保存に非対応のためリストに変換
         for key, value in data.items():
-            data[key] = value.tolist()
+            if isinstance(value, np.ndarray):
+                data[key] = value.tolist()
         save_path = save_dir.joinpath(f'{file_name}.json')
         with open(save_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
@@ -295,8 +311,6 @@ if __name__ == '__main__':
     semesters = [1, 2]
     # クラスリスト
     course_list = ['AS', 'P', 'F', 'A']
-    # groups = np.arange(1, 4)
-    # classes = [f'{c}-{g}' for c in course_list for g in groups]
     
     # モックデータと制約を作成してファイルに保存
     df_room, periods = make_auxilialy_data(DATA_DIR)

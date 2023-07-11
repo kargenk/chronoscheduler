@@ -11,7 +11,6 @@ if __name__ == '__main__':
     
     # 最適化された時間割データの読み込み
     dtype = {'授業コード': str}
-    cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']
     df = pd.read_csv(OUTPUT_DIR.joinpath('result.csv'), dtype=dtype)
     df_fix = pd.read_csv(FIX_DIR.joinpath(semester,'fix.csv'), dtype=dtype)
     df = df.merge(df_fix, how='outer')
@@ -31,6 +30,7 @@ if __name__ == '__main__':
     # 最終出力形式のような多層インデックスのデータフレームを作成
     time_slots = [str(i) + '限' for i in range(1, 6)]
     days = ['月', '火', '水', '木', '金', '土']
+    cols = ['授業コード', '講義名', '対象コース', '種別', '担当教員', '教室', '時限', 'コマ数', '推定受講者数']
     multi_cols = pd.MultiIndex.from_product([days, cols])
     multi_idx = pd.MultiIndex.from_product([time_slots, range(max_len + 1)], names=['時限', '講義数'])
     df_output = pd.DataFrame(index=multi_idx, columns=multi_cols)
