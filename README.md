@@ -110,11 +110,17 @@ Only integer programming is supported yet...
 - CPU: 12th Gen Intel(R) Core(TM) i9-12900(16 cores, 24 threads)
 - Memory: 64GB
 
-### ⌛Calculation Time
-In the above environment, takes 1400~3000 \[sec\]
+### Calculation Time⌛
+In the above environment, takes
+- 3000 \[sec\] (without p_lowers, p_uppers)
+- 1400 \[sec\] (with p_lowers, p_uppers)
 ![calculation Time](api/img/calculation_time.png)
 
 ## 🚀Updates
+**2023.07.14**
+- Excel file format(.xlsx) support
+- add visualize notebook
+
 **2023.07.11**
 - add constraints on number of lectures per period
 - add SCIP Solver environment, but not integrated
