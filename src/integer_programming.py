@@ -209,21 +209,19 @@ class IPSolver(object):
         # pulp.pulpTestAll()
         # print(pulp.listSolvers(onlyAvailable=True))  # 使用できるソルバ一覧
         if self.solver_name == 'cbc':
-            # solver = pulp.PULP_CBC_CMD(msg=True, threads=self.num_cores)  # timeLimit=24*60*60
             solver = pulp.PULP_CBC_CMD(msg=True, options=[f'threads={self.num_cores}'])
         elif self.solver_name == 'scip':
-            # Caution: failed on pulp ... orz
             solver = pulp.SCIP_CMD()
         time_start = time.perf_counter()
         status = self.problem.solve(solver)
         time_end = time.perf_counter()
-        objective = pulp.value(self.problem.objective)  # 理想は総コマ数(モックデータでは299)
+        objective = pulp.value(self.problem.objective)  # 理想は総コマ数
         print(f'Status: {pulp.LpStatus[status]}, Time: {time_end - time_start} [sec]')
         print(f'objective: {objective}')
         
         # 解が得られれば出力
         if pulp.LpStatus[status] == 'Optimal':
-            with open(self.output_dir.joinpath('result.csv'), 'w', encoding='utf-8', newline='') as f:
+            with open(self.output_dir.joinpath('result.csv'), 'w', encoding='utf-8-sig', newline='') as f:
                 writer = csv.writer(f)
                 contents = []
                 cols = ['授業コード', '講義名', '対象コース', '種別', '担当教員',

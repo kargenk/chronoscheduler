@@ -41,13 +41,14 @@ def update_lecture_properties(data_dir: Path,
     df_updated['時限'] = df_updated['時限'].apply(lambda x: x[0] + str(int(x[1]) + 1))
     df_fix = pd.concat([df_result, df_updated], axis=0)
     df_fix = df_fix.sort_values(by=['授業コード', '時限']).reset_index(drop=True)
-    df_fix.to_csv(result_path.parent.joinpath('fix.csv'), index=False)
+    df_fix.to_csv(result_path.parent.joinpath('fix.csv'),
+                  index=False, encoding='utf-8-sig')
     
     # 次に解く問題のため割り当てた授業をデータから削除して更新
     df_result = df_result.set_index('授業コード')
     df = df.set_index('授業コード')
     df = df.drop(df_result.index, errors='ignore').reset_index()
-    df.to_csv(data_path, index=False)
+    df.to_csv(data_path, index=False, encoding='utf-8-sig')
     # 授業辞書も更新
     codes = df['授業コード'].to_list()
     make_mappings(data_dir, df, codes)
@@ -125,7 +126,7 @@ def update_constraints(constraints_dir: Path,
         save_path = constraints_dir.joinpath(f'{name}.json')
         for key, value in constraint.items():
             constraint[key] = value
-        with open(save_path, 'w', encoding='utf-8') as f:
+        with open(save_path, 'w', encoding='utf-8-sig') as f:
             json.dump(constraint, f, ensure_ascii=False, indent=2)
     
     return cp_map, pr_map, tp_map

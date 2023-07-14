@@ -33,14 +33,14 @@ def make_auxilialy_data(data_dir: Path = None) -> tuple[pd.DataFrame, list[str]]
     # データフレームの形式で保存
     df_rooms = pd.DataFrame({'教室': rooms, '許容人数': capacities})
     if data_dir:
-        df_rooms.to_csv(data_dir.joinpath('rooms.csv'), index=None)
+        df_rooms.to_csv(data_dir.joinpath('rooms.csv'), index=None, encoding='utf-8-sig')
     
     # 時間リスト
     days = ['月', '火', '水', '木', '金', '土']
     times = np.arange(1, 6)
     periods = [f'{d}{t}' for d in days for t in times]
     if data_dir:
-        with open(data_dir.joinpath('periods.csv'), 'w', encoding='utf-8', newline='') as f:
+        with open(data_dir.joinpath('periods.csv'), 'w', encoding='utf-8-sig', newline='') as f:
             writer = csv.writer(f)
             writer.writerow(periods)
     
@@ -113,7 +113,7 @@ def make_main_data(data_dir: Path,
             courses = [np.random.choice(course_list)]
         course = ','.join(courses)
         
-        # 教員の人数を決定(複数人の場合は2~5人の中からランダムに選択)
+        # 教員の人数を決定(複数人の場合は2~4人の中からランダムに選択)
         is_omunibus = (np.random.choice([True, False], p=prob_teacher))
         if is_omunibus:
             num_teachers = np.random.randint(2, 5)
@@ -127,7 +127,8 @@ def make_main_data(data_dir: Path,
     
     cols = ['授業コード', '講義名', '種別', '対象コース', '担当教員', 'コマ数', '推定受講者数', '開講期', '特定使用教室', '連続数']
     df = pd.DataFrame(subject_properties, columns=cols)
-    df.to_csv(data_dir.joinpath('lecture_properties.csv'), index=False, header=True)
+    df.to_csv(data_dir.joinpath('lecture_properties.csv'),
+              index=False, header=True, encoding='utf-8-sig')
     
     return df
 
@@ -175,7 +176,7 @@ def make_mappings(data_dir: Path, df: pd.DataFrame, codes: list[str]) -> None:
              course_lectures, course_compulsoly_lectures]
     for file_name, data in zip(dict_names, dicts):
         save_path = data_dir.joinpath(f'{file_name}.json')
-        with open(save_path, 'w', encoding='utf-8') as f:
+        with open(save_path, 'w', encoding='utf-8-sig') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
 def make_constraints(data_dir: Path,
@@ -288,7 +289,7 @@ def make_constraints(data_dir: Path,
             if isinstance(value, np.ndarray):
                 data[key] = value.tolist()
         save_path = save_dir.joinpath(f'{file_name}.json')
-        with open(save_path, 'w', encoding='utf-8') as f:
+        with open(save_path, 'w', encoding='utf-8-sig') as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
 
 if __name__ == '__main__':
@@ -325,7 +326,8 @@ if __name__ == '__main__':
         save_dir.mkdir(parents=True, exist_ok=True)
         codes = df_lecture[idx]['授業コード'].to_list()
         
-        df_lecture[idx].to_csv(save_dir.joinpath('lecture_properties.csv'), index=False, header=True)
+        df_lecture[idx].to_csv(save_dir.joinpath('lecture_properties.csv'),
+                               index=False, header=True, encoding='utf-8-sig')
         
         # 情報のマッピングと制約定義
         make_mappings(save_dir, df_lecture[idx], codes)
@@ -344,6 +346,6 @@ if __name__ == '__main__':
         # マッピングに関しては現状では連続の制約を組めていないため、1コマの割り当て問題として解く(連続部分は後処理で追加)
         df_continuous.loc[:, 'コマ数'] = 1
         df_continuous.to_csv(save_dir.joinpath(f'lecture_properties.csv'),
-                             index=False, header=True)
+                             index=False, header=True, encoding='utf-8-sig')
         codes = df_continuous['授業コード'].to_list()
         make_mappings(save_dir, df_continuous, codes)
