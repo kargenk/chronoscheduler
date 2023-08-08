@@ -163,6 +163,7 @@ cython_debug/
 materials
 /data/*
 !/data/toy/
+/data/toy/first/constraints/xlsx
 environments/.dockerenv
 /outputs/*
 !/outputs/toy/
